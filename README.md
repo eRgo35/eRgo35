@@ -6,6 +6,6 @@
 
 ## Mike around the web 🌎:
 -  find me on <a href="https://www.linkedin.com/in/mike-czyz/">LinkedIn</a> 💼
--  take a look at my <a href="https://mczyz.icu">Portfolio</a> 💻
+-  take a look at my <a href="https://mczyz.icu">Website</a> 💻
 -  visit my <a href="https://www.youtube.com/channel/UCiEQ8ZDBKqxdOTt1DVnoyQQ">Youtube Channel</a> 📺
 -  and follow my <a href="https://twitter.com/Mike_Czyz_">Twitter</a> 📰
