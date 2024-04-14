@@ -14,3 +14,7 @@
 <p>Psst! You can also take a look at my <a href="https://github.com/eRgo35/dots">dotfiles</a> and find my latest rice 🍚.</p>
 
 <p>Also, checkout <a href="https://scientia.c2yz.com">this site</a>. You might find it interesting. 👀</p>
+
+## Stats 😎
+[![stats](https://github-readme-stats.vercel.app/api?username=eRgo35&theme=gruvbox)](https://github.com/eRgo35)
+[![langs](https://github-readme-stats.vercel.app/api/top-langs/?username=eRgo35&exclude_repo=dots&langs_count=8&layout=compact&theme=gruvbox)](https://github.com/eRgo35?tab=repositories)
