@@ -12,7 +12,6 @@ I'm having a lot of fun with the latest technologies, mainly Cryptocurrencies �
 -  take a look at my <a href="https://c2yz.com">Website</a> 🕸️
 -  find me on <a href="https://www.linkedin.com/in/mike-czyz/">LinkedIn</a> 💼
 -  visit my <a href="https://www.youtube.com/@eRgo35">Youtube</a> channel 📹
--  and follow me on <a href="https://twitter.com/Mike_Czyz_">X</a> 🐦
 
 <p>Psst! You can also take a look at my <a href="https://github.com/eRgo35/dots">dotfiles</a> to find my latest rice 🍚.</p>
 
