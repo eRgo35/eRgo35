@@ -13,3 +13,16 @@ I'm currently working on new fascinating projects, so be sure to follow me!
 -  🌎 take a look at my [website](https://c2yz.com)
 -  💼 find me on [LinkedIn](https://www.linkedin.com/in/mike-czyz)
 -  📹 visit my [Youtube](https://www.youtube.com/@eRgo35)
+
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="images/breakout-dark.svg"
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="images/breakout-light.svg"
+  />
+  <img alt="Breakout Game" src="images/breakout-light.svg" />
+</picture>
