@@ -36,11 +36,11 @@ QNT. Most of what is on this page I built after hours.
 - **[Server-Manager](https://github.com/eRgo35/Server-Manager)** — local
   server management · Rust
 
-Plus two toy kernels — the **encore** OS from
-[encore-industries](https://github.com/encore-industries) and **LeafOS** in
-Assembly — and self-hosting everything on a Rocky Linux + Fedora fleet,
-dotfiles in [dots](https://github.com/eRgo35/dots). The other half of the
-work sits in 89 private repos I never got round to opening up.
+Plus the **encore** OS from
+[encore-industries](https://github.com/encore-industries) and the **LeafOS**
+kernel in Assembly — and self-hosting everything on a Rocky Linux + Fedora
+fleet, dotfiles in [dots](https://github.com/eRgo35/dots). The other half of
+the work sits in 89 private repos I never got round to opening up.
 
 ### Lately
 

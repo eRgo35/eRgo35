@@ -35,9 +35,9 @@ QNT. Większość rzeczy na tej stronie buduję po godzinach.
 - **[Server-Manager](https://github.com/eRgo35/Server-Manager)** — zarządzanie
   serwerami lokalnymi · Rust
 
-Do tego dwa zabawkowe kernele — system **encore** z
-[encore-industries](https://github.com/encore-industries) i **LeafOS** w
-Assembly — oraz self-hosting wszystkiego na flotce Rocky Linux i Fedora,
+Do tego system **encore** z
+[encore-industries](https://github.com/encore-industries) i kernel **LeafOS**
+w Assembly — oraz self-hosting wszystkiego na Rocky Linux i Fedorze,
 dotfiles w [dots](https://github.com/eRgo35/dots). Druga połowa pracy siedzi
 w 89 prywatnych repozytoriach, których nie zdążyłem jeszcze otworzyć.
 
