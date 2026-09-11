@@ -14,11 +14,6 @@
   </picture>
 </div>
 
-# Michał Czyż
-
-MEng student at the Silesian University of Technology and a programmer at
-QNT. Most of what is on this page I built after hours.
-
 ### After hours
 
 - **[ah](https://github.com/eRgo35/ah)** — declarative package manager for
@@ -31,29 +26,25 @@ QNT. Most of what is on this page I built after hours.
   server management · Rust
 
 Plus the **encore** OS from
-[encore-industries](https://github.com/encore-industries) and the **LeafOS**
-kernel in Assembly — and self-hosting everything on a Rocky Linux + Fedora
-fleet, dotfiles in [dots](https://github.com/eRgo35/dots). The other half of
-the work sits in 89 private repos I never got round to opening up.
+[encore-industries](https://github.com/encore-industries), the **LeafOS**
+kernel in Assembly, and a self-hosted Rocky Linux + Fedora fleet with
+dotfiles in [dots](https://github.com/eRgo35/dots). The other half of the
+work sits in 89 private repos I never got round to opening up.
 
 ### Lately
 
-Machine translation and neural-fuzzy systems — a granular neuro-fuzzy
-system, an LLM response-style mimicry experiment, and a translation
-platform built on IBM Model 1 and benchmarked against Seq2Seq and modern
-LLMs.
+Machine translation — a platform built on IBM Model 1 and benchmarked
+against Seq2Seq and modern LLMs. Plus a granular neuro-fuzzy system.
 
-### At university
+<div align="center">
 
-Five publications (2024–2025) in computational oncology and biomedical
-instrumentation: neural-network segmentation of breast lesions in DCE-MRI,
-high-precision microfluidic pump control, and remote administration of a
-bacterial-hydrogen bioreactor.
+# Michał Czyż
 
-### Things I keep coming back to
+MEng student at the Silesian University of Technology, programmer at QNT.
+Five publications in computational oncology. Everything above — built after
+hours.
 
-Linux ricing and dwm · self-hosting on Rocky Linux and Fedora · reproducible
-builds · Unreal and XR · 80s jpop
+</div>
 
 ---
 

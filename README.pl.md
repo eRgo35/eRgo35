@@ -14,11 +14,6 @@
   </picture>
 </div>
 
-# Michał Czyż
-
-Student inżynierii magisterskiej na Politechnice Śląskiej i programista w
-QNT. Większość rzeczy na tej stronie buduję po godzinach.
-
 ### Po godzinach
 
 - **[ah](https://github.com/eRgo35/ah)** — deklaratywny menedżer pakietów
@@ -30,29 +25,25 @@ QNT. Większość rzeczy na tej stronie buduję po godzinach.
   serwerami lokalnymi · Rust
 
 Do tego system **encore** z
-[encore-industries](https://github.com/encore-industries) i kernel **LeafOS**
-w Assembly — oraz self-hosting wszystkiego na Rocky Linux i Fedorze,
-dotfiles w [dots](https://github.com/eRgo35/dots). Druga połowa pracy siedzi
-w 89 prywatnych repozytoriach, których nie zdążyłem jeszcze otworzyć.
+[encore-industries](https://github.com/encore-industries), kernel **LeafOS**
+w Assembly oraz self-hosted flotka na Rocky Linux i Fedorze, dotfiles w
+[dots](https://github.com/eRgo35/dots). Druga połowa pracy siedzi w 89
+prywatnych repozytoriach, których nie zdążyłem jeszcze otworzyć.
 
 ### Ostatnio
 
-Tłumaczenie maszynowe i systemy neuro-rozmyte — granularny system
-neuro-rozmyty, eksperyment z naśladowaniem stylu odpowiedzi LLM-a oraz
-platforma tłumaczeniowa oparta na IBM Model 1, porównywana z Seq2Seq i
-współczesnymi LLM-ami.
+Tłumaczenie maszynowe — platforma oparta na IBM Model 1, porównywana z
+Seq2Seq i współczesnymi LLM-ami. Do tego granularny system neuro-rozmyty.
 
-### Na uczelni
+<div align="center">
 
-Pięć publikacji (2024–2025) z onkologii obliczeniowej i instrumentacji
-biomedycznej: segmentacja zmian piersi w DCE-MRI sieciami neuronowymi,
-precyzyjne sterowanie pompą mikrofluidyczną i zdalne zarządzanie
-bioreaktorem bakteryjno-wodorowym.
+# Michał Czyż
 
-### Do czego wracam
+Student inżynierii magisterskiej na Politechnice Śląskiej, programista w
+QNT. Pięć publikacji z onkologii obliczeniowej. Wszystko powyżej — budowane
+po godzinach.
 
-Ricing Linuksa i dwm · self-hosting na Rocky Linux i Fedorze ·
-odtwarzalne buildy · Unreal i XR · jpop z lat 80.
+</div>
 
 ---
 
