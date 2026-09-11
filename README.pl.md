@@ -14,12 +14,6 @@
   </picture>
 </div>
 
----
-
-<div align="center">
-  <a href="README.md">🇬🇧 in English</a>
-</div>
-
 # Michał Czyż
 
 Student inżynierii magisterskiej na Politechnice Śląskiej i programista w
@@ -68,4 +62,8 @@ odtwarzalne buildy · Unreal i XR · jpop z lat 80.
     <source media="(prefers-color-scheme: light)" srcset="images/breakout-light.svg" />
     <img alt="Gra Breakout" src="images/breakout-light.svg" />
   </picture>
+</div>
+
+<div align="center">
+  <a href="README.md">🇬🇧 in English</a>
 </div>

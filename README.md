@@ -14,12 +14,6 @@
   </picture>
 </div>
 
----
-
-<div align="center">
-  <a href="README.pl.md">🇵🇱 po polsku</a>
-</div>
-
 # Michał Czyż
 
 MEng student at the Silesian University of Technology and a programmer at
@@ -69,4 +63,8 @@ builds · Unreal and XR · 80s jpop
     <source media="(prefers-color-scheme: light)" srcset="images/breakout-light.svg" />
     <img alt="Breakout Game" src="images/breakout-light.svg" />
   </picture>
+</div>
+
+<div align="center">
+  <a href="README.pl.md">🇵🇱 po polsku</a>
 </div>
