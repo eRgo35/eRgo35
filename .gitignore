@@ -1,0 +1,12 @@
+# Design notes — contains employer details, career history, and private repo
+# references. Never publish: this is a public profile repo.
+docs/
+
+# header verification artifacts
+images/concepts/frames/
+__pycache__/
+images/concepts/frames-*.json
+
+# header dev tooling + verification artifacts (name private repos; keep out of the public profile repo)
+tools/
+images/concepts/
