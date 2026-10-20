@@ -27,6 +27,13 @@ jobs:
           mv output/light.svg images/breakout-light.svg
           mv output/dark.svg images/breakout-dark.svg
 
+      - name: Update header repo counts
+        env:
+          # PAT with read access to all repos (incl. private + org); the
+          # default GITHUB_TOKEN cannot see private repos.
+          GH_STATS_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
+        run: python3 .github/scripts/update_header_counts.py
+
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
@@ -34,6 +41,7 @@ jobs:
 
       - name: Commit and push SVGs
         run: |
-          git add images/breakout-light.svg images/breakout-dark.svg
-          git commit -m "chore: update breakout SVGs" || echo "No changes to commit"
+          git add images/breakout-light.svg images/breakout-dark.svg \
+                  images/header-boot-light.svg images/header-boot-dark.svg
+          git commit -m "chore: update breakout SVGs and header counts" || echo "No changes to commit"
           git push
