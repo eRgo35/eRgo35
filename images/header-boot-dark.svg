@@ -49,7 +49,7 @@
 <rect x="40" y="31" width="8" height="15" fill="#E6EDF3" opacity="0"><set attributeName="opacity" to="1" begin="3.75s"/><animate attributeName="x" from="40" to="198" begin="3.75s" dur="0.35s" fill="freeze"/><set attributeName="opacity" to="0" begin="4.22s"/></rect>
 <text x="40" y="64" font-size="13" fill="#8B949E" opacity="0">Password:<set attributeName="opacity" to="1" begin="4.22s"/></text>
 <text x="121" y="64" font-size="13" clip-path="url(#cpw)" fill="#E6EDF3">••••••••</text>
-<text x="40" y="84" font-size="12" fill="#8B949E" opacity="0">Account created 2017 · uptime 9 years · 116 repos<animate attributeName="opacity" values="0;1" begin="4.72s" dur="0.22s" fill="freeze"/></text>
+<text x="40" y="84" font-size="12" fill="#8B949E" opacity="0">Account created 2017 · uptime 9 years · 117 repos<animate attributeName="opacity" values="0;1" begin="4.72s" dur="0.22s" fill="freeze"/></text>
 </g>
 <g>
 <text x="40" y="106" font-size="14" fill="#3FB950" opacity="0">$<animate attributeName="opacity" values="0;1" begin="4.9s" dur="0.1s" fill="freeze"/></text>
