@@ -1,12 +1,16 @@
-name: generate breakout svg
+name: render profile svgs
 
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - ".github/scripts/**"
 
 jobs:
-  generate-svg:
+  render:
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -16,32 +20,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: generate SVG
+      - name: Generate breakout SVGs
         uses: cyprieng/github-breakout@v1.2.4
         with:
           github_username: ${{ github.repository_owner }}
 
-      - name: Move generated SVGs
+      - name: Skin breakout in Encore chrome
         run: |
           mkdir -p images
-          mv output/light.svg images/breakout-light.svg
-          mv output/dark.svg images/breakout-dark.svg
+          python3 .github/scripts/skin_breakout.py output/dark.svg  images/breakout-dark.svg  dark
+          python3 .github/scripts/skin_breakout.py output/light.svg images/breakout-light.svg light
+          rm -rf output
 
-      - name: Update header repo counts
+      - name: Render header, tree and wave
         env:
           # PAT with read access to all repos (incl. private + org); the
-          # default GITHUB_TOKEN cannot see private repos.
+          # default GITHUB_TOKEN cannot see private repos. Without it the
+          # render falls back to the last values in stats.json.
           GH_STATS_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
-        run: python3 .github/scripts/update_header_counts.py
+        run: python3 .github/scripts/render.py --github-stats
 
-      - name: Configure git
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit and push SVGs
-        run: |
-          git add images/breakout-light.svg images/breakout-dark.svg \
-                  images/header-boot-light.svg images/header-boot-dark.svg
-          git commit -m "chore: update breakout SVGs and header counts" || echo "No changes to commit"
+          git add images/*.svg .github/scripts/stats.json
+          git commit -m "chore: render profile svgs" || echo "No changes to commit"
           git push
