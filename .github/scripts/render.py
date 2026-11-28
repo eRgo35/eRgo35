@@ -5,7 +5,7 @@
     GH_STATS_TOKEN=... python3 .github/scripts/render.py --github-stats
 
 Outputs (images/):
-    header-{dark,light}.svg   boot -> splash -> login -> neofetch
+    header-{dark,light}.svg   whoami: name, role, school
     tree-{dark,light}.svg     ~/after-hours project tree
     wave-{dark,light}.svg     footer divider
 
@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sys
 import urllib.request
 from datetime import datetime, timezone
@@ -36,28 +37,30 @@ CW = 8.4  # advance of one monospace glyph at 14px (0.6em)
 FONT = ('ui-monospace, SFMono-Regular, "SF Mono", Menlo, "JetBrains Mono", '
         '"DejaVu Sans Mono", Consolas, "Liberation Mono", monospace')
 
-# Classic six-colour rainbow: the Encore accent palette.
+# Six-colour rainbow: window dots and the wave footer (decoration only).
 RAINBOW = ["#61BB46", "#FDB827", "#F5821F", "#E03A3E", "#963D97", "#009DDC"]
 
 THEMES = {
     "dark": dict(
         body="#010409", bar="#161B22", border="#30363D", text="#E6EDF3",
-        muted="#8B949E", dim="#484F58", green="#3FB950", blue="#58A6FF",
+        muted="#8B949E", dim="#7D8590", green="#3FB950", blue="#58A6FF",
         amber="#D29922", red="#F85149", purple="#BC8CFF", orange="#F0883E",
-        scan="#FFFFFF", scan_op=0.022, shine=0.30, glow=0.55,
-        rainbow=RAINBOW, status_fg="#010409",
+        scan="#FFFFFF", scan_op=0.022, glow=0.55,
+        rainbow=RAINBOW,
     ),
     "light": dict(
         body="#FFFFFF", bar="#F6F8FA", border="#D0D7DE", text="#1F2328",
-        muted="#59636E", dim="#AFB8C1", green="#1A7F37", blue="#0969DA",
+        muted="#59636E", dim="#6E7781", green="#1A7F37", blue="#0969DA",
         amber="#9A6700", red="#CF222E", purple="#8250DF", orange="#BC4C00",
-        scan="#000000", scan_op=0.016, shine=0.55, glow=0.0,
+        scan="#000000", scan_op=0.016, glow=0.0,
         rainbow=["#4FA83A", "#E8A317", "#E5731A", "#D63236", "#8A3A8B", "#0090C9"],
-        status_fg="#FFFFFF",
     ),
 }
 
-DEFAULT_STATS = {"created": 2017, "uptime_years": 9, "repos": 118, "private": 41}
+DEFAULT_STATS = {"created": 2017, "uptime_years": 9, "repos": 118, "private": 41, "releases": {}}
+
+OWNER = "eRgo35"
+RELEASE_REPOS = ["okiro", "lyra", "notae", "comma", "ti", "ltx", "graduale-romanum"]
 
 
 # --------------------------------------------------------------------------
@@ -71,8 +74,18 @@ QUERY = """
     total: repositories(ownerAffiliations: OWNER) { totalCount }
     private: repositories(privacy: PRIVATE, ownerAffiliations: OWNER) { totalCount }
   }
+%s
 }
-"""
+""" % "\n".join(
+    f'  r{i}: repository(owner: "{OWNER}", name: "{n}") {{ latestRelease {{ tagName }} }}'
+    for i, n in enumerate(RELEASE_REPOS)
+)
+
+
+def short_tag(tag: str) -> str:
+    """comma-v0.5.1 / 0.2.0 / v1.0.0 -> v0.5.1 / v0.2.0 / v1.0.0"""
+    m = re.search(r"v?(\d[\w.-]*)$", tag)
+    return f"v{m.group(1)}" if m else tag
 
 
 def fetch_github_stats(token: str) -> dict:
@@ -93,7 +106,13 @@ def fetch_github_stats(token: str) -> dict:
     created = datetime.fromisoformat(v["createdAt"].replace("Z", "+00:00"))
     now = datetime.now(timezone.utc)
     years = now.year - created.year - ((now.month, now.day) < (created.month, created.day))
+    releases = {}
+    for i, n in enumerate(RELEASE_REPOS):
+        r = body["data"].get(f"r{i}") or {}
+        if r.get("latestRelease"):
+            releases[n] = short_tag(r["latestRelease"]["tagName"])
     return {
+        "releases": releases,
         "created": created.year,
         "uptime_years": years,
         "repos": v["total"]["totalCount"],
@@ -172,24 +191,25 @@ def text(x: float, y: float, parts, size: float = 14, style: str = "",
 BASE_CSS = """
 text{white-space:pre}
 .cv{transform:scaleX(0);transform-box:fill-box;transform-origin:100% 50%}
-.gx{transform-box:fill-box;transform-origin:0 50%}
-.fb{transform-box:fill-box;transform-origin:50% 50%}
 .cur{opacity:0}
-.scene{opacity:0}
 @keyframes in{from{opacity:0}}
-@keyframes up{from{opacity:0;transform:translateY(6px)}}
+@keyframes up{from{opacity:0;transform:translateY(8px)}}
 @keyframes slide{from{opacity:0;transform:translateX(-14px)}}
 @keyframes cover{from{transform:scaleX(1)}to{transform:scaleX(0)}}
-@keyframes grow{from{transform:scaleX(0)}}
-@keyframes win{0%,100%{opacity:1}}
 @keyframes blink{0%,49.9%{opacity:1}50%,100%{opacity:0}}
-@keyframes pop{0%{opacity:0;transform:translateY(-22px) scale(.85)}65%{opacity:1;transform:translateY(3px) scale(1.02)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 """
 
 
+def cursor(t: dict, x: float, y: float, size: float, style: str, cls: str = "") -> str:
+    c = f' class="{cls}"' if cls else ""
+    return (f'<rect{c} x="{x:.1f}" y="{y - size * .86:.1f}" width="{tlen("x", size):.1f}" '
+            f'height="{size * 1.07:.1f}" fill="{t["text"]}" {style}/>')
+
+
 def typed(d: Doc, x: float, y: float, s: str, color: str, start: float,
-          cps: float = 16, hold_before: float = 0.0, hold_after: float = 0.25) -> float:
+          cps: float = 16, hold_before: float = 0.0, hold_after: float = 0.25,
+          size: float = 14) -> float:
     """Text revealed glyph by glyph with a block cursor riding along.
 
     Returns the time typing finishes.
@@ -197,34 +217,31 @@ def typed(d: Doc, x: float, y: float, s: str, color: str, start: float,
     t = d.t
     n = max(len(s), 1)
     dur = n / cps
-    d.add(text(x, y, [(s, color)]))
+    d.add(text(x, y, [(s, color)], size=size))
     # cover hides the text and shrinks rightwards in n steps
-    d.add(f'<rect class="cv" x="{x:.1f}" y="{y-13:.1f}" width="{tlen(s)+1:.1f}" height="18" '
+    d.add(f'<rect class="cv" x="{x:.1f}" y="{y - size * .93:.1f}" width="{tlen(s, size)+1:.1f}" height="{size * 1.3:.1f}" '
           f'fill="{t["body"]}" style="animation:cover {dur:.2f}s steps({n},end) {start:.2f}s both"/>')
     # cursor: idle at start, step across, idle at end, then vanish
     total = hold_before + dur + hold_after
     a = hold_before / total * 100
     b = (hold_before + dur) / total * 100
-    W_ = n * CW
+    W_ = tlen(s, size)
     k = d.keyframes(
         f"0%{{opacity:1;transform:translateX(0)}}"
         f"{a:.2f}%{{opacity:1;transform:translateX(0);animation-timing-function:steps({n},end)}}"
         f"{b:.2f}%,100%{{opacity:1;transform:translateX({W_:.1f}px)}}"
     )
-    d.add(f'<rect class="cur" x="{x:.1f}" y="{y-12:.1f}" width="8.4" height="15" fill="{t["text"]}" '
-          f'style="animation:{k} {total:.2f}s linear {start-hold_before:.2f}s none"/>')
+    d.add(cursor(t, x, y, size, f'style="animation:{k} {total:.2f}s linear {start-hold_before:.2f}s none"', "cur"))
     return start + dur
 
 
-def window(t: dict, h: float, title: str, right: str, body: str, frames: list[str],
-           label: str, extra_defs: str = "", status: str = "") -> str:
+def window(t: dict, h: float, title: str, body: str, frames: list[str], label: str) -> str:
     wid = "w"
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {h}" width="{W}" height="{h}" role="img" aria-label="{escape(label, {'"': '&quot;'})}" font-family='{FONT}'>
 <style>{BASE_CSS}{"".join(frames)}</style>
 <defs>
 <clipPath id="{wid}"><rect x="1" y="1" width="{W-2}" height="{h-2}" rx="11"/></clipPath>
 <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="{t["scan"]}" opacity="{t["scan_op"]}"/></pattern>
-{extra_defs}
 </defs>
 <g clip-path="url(#{wid})">
 <rect width="{W}" height="{h}" fill="{t["body"]}"/>
@@ -234,9 +251,7 @@ def window(t: dict, h: float, title: str, right: str, body: str, frames: list[st
 <circle cx="42" cy="18" r="6" fill="{t["rainbow"][1]}"/>
 <circle cx="62" cy="18" r="6" fill="{t["rainbow"][0]}"/>
 {text(W/2, 22.5, [(title, t["muted"])], size=12, anchor="middle")}
-{text(W-18, 22.5, [(right, t["dim"])], size=11, anchor="end")}
 {body}
-{status}
 <rect y="37" width="{W}" height="{h-37}" fill="url(#scan)" pointer-events="none"/>
 </g>
 <rect x="0.5" y="0.5" width="{W-1}" height="{h-1}" rx="11.5" fill="none" stroke="{t["border"]}"/>
@@ -245,273 +260,118 @@ def window(t: dict, h: float, title: str, right: str, body: str, frames: list[st
 
 
 # --------------------------------------------------------------------------
-# pixel art
-# --------------------------------------------------------------------------
-
-GLYPHS = {
-    "e": [".###.", "#...#", "#####", "#....", "#...#", ".###."],
-    "n": ["####.", "#...#", "#...#", "#...#", "#...#", "#...#"],
-    "c": [".####", "#....", "#....", "#....", "#....", ".####"],
-    "o": [".###.", "#...#", "#...#", "#...#", "#...#", ".###."],
-    "r": ["#.###", "##...", "#....", "#....", "#....", "#...."],
-}
-
-LOGO = [  # 10 x 12, six two-row stripes
-    "..######..",
-    ".########.",
-    "###....###",
-    "##......##",
-    "##......##",
-    "##########",
-    "##########",
-    "##........",
-    "##........",
-    "###.....##",
-    ".########.",
-    "..######..",
-]
-
-
-def pixels(rows, x0, y0, cell, gap=0.0) -> list[tuple[float, float, int]]:
-    out = []
-    for r, row in enumerate(rows):
-        for c, ch in enumerate(row):
-            if ch == "#":
-                out.append((x0 + c * cell, y0 + r * cell, r))
-    return out
-
-
-def rects(px, cell, fill, inset=0.0) -> str:
-    s = cell - inset
-    return "".join(
-        f'<rect x="{x+inset/2:.1f}" y="{y+inset/2:.1f}" width="{s:.1f}" height="{s:.1f}" fill="{fill}"/>'
-        for x, y, _ in px
-    )
-
-
-# --------------------------------------------------------------------------
-# header: boot -> splash -> session (neofetch)
+# header: whoami
 # --------------------------------------------------------------------------
 
 def header(theme: str, st: dict) -> str:
     t = THEMES[theme]
     d = Doc(t)
-    H = 500
-    years, repos, priv, created = st["uptime_years"], st["repos"], st["private"], st["created"]
-    yrs = f"{years} year{'' if years == 1 else 's'}"
+    created = st["created"]
+    public = st["repos"] - st["private"]
+    S = 18  # small line size; README is scaled ~0.44x on phones
 
-    # ---- scene 1: POST ---------------------------------------------------
-    BOOT_END = 1.95
-    d.add(f'<g class="scene" style="animation:{d.keyframes("0%,90%{opacity:1}100%{opacity:0}")} {BOOT_END:.2f}s linear 0s both">')
-    d.add(text(40, 70, [("EncoreBIOS v1.04 · (C) 2026 encore-industries", t["muted"])], style=anim("in", .1, .08)))
-    rows = [
-        (100, "CPU     : Encode E35 “Cerebrum” 8-core @ 3.90GHz", .22, .36),
-        (148, "Detect  : hda ENCORE-KERNEL · hdb RUST-TOOLS", 1.0, 1.1),
-        (172, "Boot    : encoreldr → /boot/encore.img", 1.16, None),
-    ]
-    for y, s, t0, ok in rows:
-        d.add(text(40, y, [(s, t["text"])], style=anim("in", .08, t0)))
-        if ok:
-            d.add(text(782, y, [("[  OK  ]", t["green"])], anchor="end", style=anim("in", .08, ok)))
-    # memory counter
-    counts = ["   640K", "  4096K", "  8192K", " 16384K", " 24576K", " 32768K"]
-    for i, c in enumerate(counts):
-        t0 = .45 + i * .08
-        last = i == len(counts) - 1
-        s = f"Memory  : {c}"
-        if last:
-            d.add(text(40, 124, [(s, t["text"])], style=anim("in", .01, t0)))
-        else:
-            d.add(text(40, 124, [(s, t["text"])], cls="cur",
-                       style=f'style="animation:win .08s linear {t0:.2f}s none"'))
-    d.add(text(782, 124, [("[  OK  ]", t["green"])], anchor="end", style=anim("in", .08, .95)))
-    # progress bar
-    d.add(f'<rect x="40" y="186" width="300" height="8" rx="2" fill="none" stroke="{t["border"]}" {anim("in", .1, 1.16)}/>')
-    d.add(f'<rect class="gx" x="40" y="186" width="300" height="8" rx="2" fill="{t["green"]}" '
-          f'style="animation:grow .5s cubic-bezier(.5,0,.3,1) 1.22s both"/>')
-    d.add(text(40, H - 22, [("Press DEL to enter SETUP · F12 boot menu", t["dim"])], size=11, style=anim("in", .1, .5)))
+    d.add(text(40, 80, [("$ ", t["green"])], size=S))
+    t1 = typed(d, 40 + tlen("$ ", S), 80, "whoami", t["text"], .3, cps=18, hold_before=.2, size=S)
+    t0 = t1 + .15
+    d.add(text(40, 140, [("Michał Czyż", t["text"])], size=46, weight="700", style=anim("up", .45, t0)))
+    d.add(text(40, 184, [("JavaScript @ QNT", t["text"]), (" by day · ", t["muted"]),
+                         ("Rust", t["orange"]), (" after hours", t["muted"])],
+               size=24, style=anim("up", .45, t0 + .12)))
+    d.add(text(40, 222, [("MEng · Silesian University of Technology", t["muted"])],
+               size=S, style=anim("in", .4, t0 + .3)))
+    d.add(text(40, 250, [(f"on GitHub since {created} · {public} public repos", t["muted"])],
+               size=S, style=anim("in", .4, t0 + .38)))
+    py = 296
+    d.add(f'<g style="animation:in .05s linear {t0 + .8:.2f}s both">')
+    d.add(text(40, py, [("$ ", t["green"])], size=S))
+    d.add(cursor(t, 40 + tlen("$ ", S), py, S, 'style="animation:blink 1.1s steps(1) 0s infinite"'))
     d.add("</g>")
+    H = py + 30
 
-    # CRT roll between scenes
-    for t0 in (BOOT_END - .1, 3.62):
-        k = d.keyframes("0%{opacity:0;transform:translateY(0)}15%{opacity:.5}85%{opacity:.5}100%{opacity:0;transform:translateY(460px)}")
-        d.add(f'<rect x="0" y="37" width="{W}" height="3" fill="{t["text"]}" opacity="0" style="animation:{k} .35s linear {t0:.2f}s none"/>')
-
-    # ---- scene 2: splash -------------------------------------------------
-    S0, S1 = 2.0, 3.72
-    k = d.keyframes("0%{opacity:0}5%,92%{opacity:1}100%{opacity:0}")
-    d.add(f'<g class="scene" style="animation:{k} {S1-S0:.2f}s linear {S0:.2f}s both">')
-    cell = 12
-    word = "encore"
-    gw = 5 * cell
-    gap = 20
-    total_w = len(word) * gw + (len(word) - 1) * gap
-    x0 = (W - total_w) / 2
-    y0 = 180
-    glow = []
-    for i, ch in enumerate(word):
-        px = pixels(GLYPHS[ch], x0 + i * (gw + gap), y0, cell)
-        col = t["rainbow"][i % 6]
-        glow.append(rects(px, cell, col))
-        d.add(f'<g class="fb" style="animation:pop .5s cubic-bezier(.3,.7,.4,1) {S0+.12+i*.09:.2f}s both">{rects(px, cell, col, inset=1)}</g>')
-    if t["glow"]:
-        d.add(f'<g filter="url(#glow)" opacity="{t["glow"]}" style="animation:in .6s ease-out {S0+.7:.2f}s both">{"".join(glow)}</g>')
-    d.add(text(W / 2, 300, [("encore os", t["text"]), ("  v1.0  ·  encore-industries", t["muted"])],
-               size=14, anchor="middle", style=anim("up", .4, S0 + .75)))
-    for i in range(3):  # loading pips
-        k = d.keyframes("0%,100%{opacity:.25}50%{opacity:1}")
-        d.add(f'<rect x="{W/2-26+i*20:.1f}" y="330" width="12" height="12" fill="{t["rainbow"][(i*2+5)%6]}" opacity=".25" '
-              f'style="animation:{k} .6s ease-in-out {S0+.9+i*.15:.2f}s 3"/>')
-    d.add("</g>")
-
-    # ---- scene 3: session ------------------------------------------------
-    T0 = 3.8
-    # everything in the session (incl. typing covers) stays hidden until T0
-    d.add(f'<g style="animation:in .15s linear {T0:.2f}s both">')
-    d.add(text(40, 68, [("encore login: ", t["muted"])]))
-    t1 = typed(d, 40 + tlen("encore login: "), 68, "mike", t["green"], T0 + .35, cps=12, hold_before=.3)
-    d.add(text(40, 90, [("Password: ", t["muted"])], style=anim("in", .05, t1 + .2)))
-    t2 = typed(d, 40 + tlen("Password: "), 90, "••••••••", t["text"], t1 + .35, cps=28, hold_before=.1, hold_after=.15)
-    d.add(text(40, 112, [("Welcome to encore os v1.0 (tty1) · account created ", t["dim"]),
-                         (str(created), t["muted"]), (" · uptime ", t["dim"]), (yrs, t["muted"])],
-               size=12, style=anim("in", .2, t2 + .25)))
-    t3s = t2 + .55
-    d.add(text(40, 144, [("$ ", t["green"])], style=anim("in", .05, t3s)))
-    t3 = typed(d, 40 + 2 * CW, 144, "neofetch", t["text"], t3s + .3, cps=14, hold_before=.25)
-
-    # neofetch block
-    N0 = t3 + .3
-    LX, LY, LC = 52, 214, 11  # logo x, y, cell (centred on the info block)
-    stripes = {}
-    for x, y, r in pixels(LOGO, LX, LY, LC):
-        stripes.setdefault(r // 2, []).append((x, y, r))
-    clip = []
-    for s_i in range(6):
-        px = stripes[s_i]
-        clip.append(rects(px, LC, "#000"))
-        d.add(f'<g style="animation:slide .35s cubic-bezier(.2,.8,.3,1) {N0+s_i*.07:.2f}s both">{rects(px, LC, t["rainbow"][s_i], inset=1)}</g>')
-    # shimmer, clipped to the logo pixels
-    d.frames.append("@keyframes shine{0%{transform:translateX(-90px)}28%,100%{transform:translateX(190px)}}")
-    d.add(f'<g clip-path="url(#logoClip)"><polygon points="{LX},{LY-10} {LX+26},{LY-10} {LX-14},{LY+150} {LX-40},{LY+150}" '
-          f'fill="#FFFFFF" opacity="{t["shine"]}" style="transform:translateX(-90px);animation:shine 5.5s ease-in-out {N0+1.2:.2f}s infinite"/></g>')
-    logo_clip = f'<clipPath id="logoClip">{"".join(clip)}</clipPath>'
-
-    IX, KX = 204, 296  # info column, value column
-    info = [
-        ("Name", [("Michał Czyż", t["text"])]),
-        ("OS", [("encore os v1.0 x86_64", t["text"])]),
-        ("Host", [("Silesian University of Technology · MEng", t["text"])]),
-        ("Kernel", [("encore · LeafOS · TriOS", t["text"])]),
-        ("Uptime", [(yrs, t["text"]), (f" (since {created})", t["muted"])]),
-        ("Repos", [(str(repos), t["text"]), (f" · {priv} private, waiting to ship", t["muted"])]),
-        ("Packages", [("rust · javascript · docker · rocky · fedora", t["text"])]),
-        ("Day job", [("JavaScript @ QNT", t["text"])]),
-        ("Now", [("Encore OS, Rust tooling, self-hosted boxes", t["text"])]),
-    ]
-    y = 172
-    d.add(text(IX, y, [("mike", t["green"]), ("@", t["muted"]), ("encore", t["blue"])], weight="600",
-               style=anim("in", .15, N0 + .1)))
-    y += 21
-    d.add(text(IX, y, [("─" * 11, t["dim"])], style=anim("in", .15, N0 + .14)))
-    for i, (k_, v) in enumerate(info):
-        y += 21
-        t0 = N0 + .2 + i * .06
-        d.add(f'<g style="animation:up .25s ease-out {t0:.2f}s both">')
-        d.add(text(IX, y, [(k_, t["blue"])], weight="600"))
-        d.add(text(KX, y, v))
-        d.add("</g>")
-    y += 24
-    for i, col in enumerate(t["rainbow"] + [t["text"], t["dim"]]):
-        d.add(f'<rect x="{IX+i*30}" y="{y-6}" width="26" height="14" rx="2" fill="{col}" '
-              f'{anim("in", .2, N0 + .8 + i * .05)}/>')
-
-    # final prompt
-    P0 = N0 + 1.3
-    py = y + 42
-    d.add(f'<g style="animation:in .05s linear {P0:.2f}s both">')
-    d.add(text(40, py, [("$ ", t["green"])]))
-    d.add(f'<rect x="{40+2*CW:.1f}" y="{py-12}" width="8.4" height="15" fill="{t["text"]}" '
-          f'style="animation:blink 1.1s steps(1) 0s infinite"/>')
-    d.add("</g>")
-    d.add("</g>")  # session
-
-    # tmux-ish status line
-    sy = H - 26
-    status = (
-        f'<g style="animation:in .2s linear {T0:.2f}s both">'
-        f'<rect y="{sy}" width="{W}" height="26" fill="{t["bar"]}"/>'
-        f'<rect y="{sy}" width="{W}" height="1" fill="{t["border"]}"/>'
-        f'<rect x="0" y="{sy+1}" width="78" height="25" fill="{t["green"]}"/>'
-        + text(14, sy + 17.5, [("encore", t["status_fg"])], size=12, weight="700")
-        + text(92, sy + 17.5, [("0:zsh*", t["text"]), ("  1:rust  2:infra  3:ai", t["muted"])], size=12)
-        + text(W - 16, sy + 17.5, [(f"{repos} repos", t["muted"]), ("  ·  ", t["dim"]),
-                                   (f"up {years}y", t["muted"]), ("  ·  ", t["dim"]), ("tty1", t["muted"])],
-               size=12, anchor="end")
-        + "</g>"
-    )
-
-    defs = logo_clip + ('<filter id="glow" x="-20%" y="-60%" width="140%" height="220%">'
-                        '<feGaussianBlur stdDeviation="9"/></filter>')
-    label = (f"Animated Encore OS terminal for Michał Czyż (mike). A BIOS posts and boots encore os, "
-             f"a rainbow pixel 'encore' splash appears, mike logs in and runs neofetch: OS encore os v1.0; "
-             f"host Silesian University of Technology, MEng; kernels encore, LeafOS and TriOS; uptime {yrs} "
-             f"since {created}; {repos} repos, {priv} private; rust, javascript, docker, rocky, fedora; "
-             f"day job JavaScript at QNT; now working on Encore OS, Rust tooling and self-hosted boxes.")
-    return window(t, H, "mike@encore: ~", "tty1", "\n".join(d.parts), d.frames, label, defs, status)
+    label = (f"Michał Czyż. JavaScript at QNT by day, Rust after hours. "
+             f"MEng, Silesian University of Technology. On GitHub since {created}, {public} public repos.")
+    return window(t, H, "~ — zsh", "\n".join(d.parts), d.frames, label)
 
 
 # --------------------------------------------------------------------------
-# tree
+# tree: ~/after-hours
 # --------------------------------------------------------------------------
+
+# (repo, description); the version comes from st["releases"]
+RUST = [
+    ("okiro", "remote wake, manage, shut down"),
+    ("lyra", "discord music bot"),
+    ("notae", "sheet-music library, android"),
+    ("comma", "shell commands from claude"),
+    ("ti", "terminal timer"),
+    ("ltx", "latex project cli"),
+]
+MUSIC = [("graduale-romanum", "gregorian chant in lilypond")]
+
+
+def tree_rows(t: dict, st: dict) -> list[tuple]:
+    """(kind, name, colour, version, text) rows in display order."""
+    rel = st.get("releases", {})
+    rows = [("dir", "rust/", t["orange"], "", "")]
+    rows += [("leaf", n, t["text"], rel.get(n, ""), desc) for n, desc in RUST]
+    rows += [("dir", "music/", t["purple"], "", "")]
+    rows += [("leaf", n, t["text"], rel.get(n, ""), desc) for n, desc in MUSIC]
+    rows += [
+        ("dir", "kernels/", t["red"], "", "encore · LeafOS · TriOS"),
+        ("dir", "ai/", t["blue"], "", "granula · nlp-platform"),
+        ("dir", "univ/", t["green"], "", "5 publications 2024–25"),
+        ("dir", "also/", t["muted"], "", "zed-dotnet · ah · NoMoreShorts"),
+    ]
+    return rows
+
 
 def tree(theme: str, st: dict) -> str:
     t = THEMES[theme]
     d = Doc(t)
-    R = t["rainbow"]
-    dirs = [
-        ("rust/", R[2], "ah · ltx · okiro · Server-Manager"),
-        ("kernels/", R[3], "encore · LeafOS · TriOS"),
-        ("infra/", R[5], "self-hosted · rocky · fedora · docker · dots"),
-        ("js/", R[1], "loom · james · QNT by day"),
-        ("ai/", R[4], "granula · anima · nlp-platform"),
-        ("univ/", R[0], "5 publications 2024–25"),
-        ("archive/", t["dim"], "lyra · ti · ascii"),
-    ]
-    d.add(text(40, 68, [("$ ", t["green"])], style=anim("in", .05, .5)))
-    t1 = typed(d, 40 + 2 * CW, 68, "tree -L 2 ~/after-hours", t["text"], 1.0, cps=22, hold_before=.5)
-    y = 102
-    d.add(text(40, y, [("~/after-hours", t["amber"])], weight="600", style=anim("in", .1, t1 + .2)))
-    for i, (name, col, items) in enumerate(dirs):
-        y += 24
-        last = i == len(dirs) - 1
-        t0 = t1 + .3 + i * .08
-        branch = "└── " if last else "├── "
-        dimmed = name == "archive/"
-        d.add(f'<g style="animation:slide .3s cubic-bezier(.2,.8,.3,1) {t0:.2f}s both">')
-        d.add(text(48, y, [(branch, t["dim"])]))
-        d.add(f'<rect x="{48+4*CW:.1f}" y="{y-9}" width="4" height="10" rx="1" fill="{col}"/>')
-        d.add(text(48 + 4 * CW + 10, y, [(name, t["muted"] if dimmed else col)], weight="600"))
-        d.add(text(196, y, [(items, t["muted"] if dimmed else t["text"])]))
-        d.add("</g>")
-    y += 34
-    d.add(text(48, y, [("7 directories · ", t["muted"]), (str(st["private"]), t["text"]),
-                       (" private repos waiting to ship", t["muted"])], size=13,
-               style=anim("in", .25, t1 + .3 + len(dirs) * .08 + .2)))
-    py = y + 32
-    H = py + 26
-    P0 = t1 + 1.3
-    d.add(f'<g style="animation:in .05s linear {P0:.2f}s both">')
-    d.add(text(40, py, [("$ ", t["green"])]))
-    d.add(f'<rect x="{40+2*CW:.1f}" y="{py-12}" width="8.4" height="15" fill="{t["text"]}" '
-          f'style="animation:blink 1.1s steps(1) 0s infinite"/>')
-    d.add("</g>")
-    label = ("Terminal running tree on ~/after-hours. rust: ah, ltx, okiro, Server-Manager. "
-             "kernels: encore, LeafOS, TriOS. infra: self-hosted, rocky, fedora, docker, dots. "
-             "js: loom, james, QNT by day. ai: granula, anima, nlp-platform. "
-             "univ: 5 publications 2024–25. archive: lyra, ti, ascii. "
-             f"7 directories, {st['private']} private repos waiting to ship.")
-    return window(t, H, "mike@encore: ~/after-hours", "zsh", "\n".join(d.parts), d.frames, label)
+    S = 18
+    cw = tlen("x", S)
+    rows = tree_rows(t, st)
+    dirs = [i for i, r in enumerate(rows) if r[0] == "dir"]
 
+    d.add(text(40, 80, [("$ ", t["green"])], size=S, style=anim("in", .05, .2)))
+    t1 = typed(d, 40 + 2 * cw, 80, "tree ~/after-hours", t["text"], .5, cps=24, hold_before=.3, size=S)
+    y = 122
+    d.add(text(40, y, [("~/after-hours", t["amber"])], size=S, weight="700", style=anim("in", .1, t1 + .15)))
+    NAME, VER, DESC = 40 + 8 * cw, 40 + 26 * cw, 40 + 35 * cw
+    for i, (kind, name, col, ver, desc) in enumerate(rows):
+        y += 30
+        t0 = t1 + .25 + i * .05
+        last_dir = i == dirs[-1]
+        if kind == "dir":
+            branch = "└── " if last_dir else "├── "
+            nx = 40 + 4 * cw
+        else:
+            last_leaf = i + 1 == len(rows) or rows[i + 1][0] == "dir"
+            branch = "│   " + ("└── " if last_leaf else "├── ")
+            nx = NAME
+        d.add(f'<g style="animation:slide .3s cubic-bezier(.2,.8,.3,1) {t0:.2f}s both">')
+        d.add(text(40, y, [(branch, t["dim"])], size=S))
+        d.add(text(nx, y, [(name, col)], size=S, weight="700" if kind == "dir" else None))
+        if ver:
+            d.add(text(VER, y, [(ver, t["green"])], size=S))
+        if desc:
+            d.add(text(DESC if kind == "leaf" else VER, y, [(desc, t["muted"] if kind == "leaf" else t["text"])], size=S))
+        d.add("</g>")
+    py = y + 46
+    d.add(f'<g style="animation:in .05s linear {t1 + .25 + len(rows) * .05 + .3:.2f}s both">')
+    d.add(text(40, py, [("$ ", t["green"])], size=S))
+    d.add(cursor(t, 40 + 2 * cw, py, S, 'style="animation:blink 1.1s steps(1) 0s infinite"'))
+    d.add("</g>")
+    H = py + 30
+
+    parts = []
+    for kind, name, _, ver, desc in rows:
+        if kind == "dir":
+            parts.append(f"{name}{' ' + desc if desc else ''}")
+        else:
+            parts.append(f"{name} {ver}: {desc}".replace("  ", " "))
+    label = "tree ~/after-hours: " + "; ".join(parts) + "."
+    return window(t, H, "~/after-hours — zsh", "\n".join(d.parts), d.frames, label)
 
 # --------------------------------------------------------------------------
 # wave footer

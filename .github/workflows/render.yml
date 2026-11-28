@@ -20,18 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Generate breakout SVGs
-        uses: cyprieng/github-breakout@v1.2.4
-        with:
-          github_username: ${{ github.repository_owner }}
-
-      - name: Skin breakout in Encore chrome
-        run: |
-          mkdir -p images
-          python3 .github/scripts/skin_breakout.py output/dark.svg  images/breakout-dark.svg  dark
-          python3 .github/scripts/skin_breakout.py output/light.svg images/breakout-light.svg light
-          rm -rf output
-
       - name: Render header, tree and wave
         env:
           # PAT with read access to all repos (incl. private + org); the

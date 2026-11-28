@@ -2,5 +2,14 @@
   "created": 2017,
   "uptime_years": 9,
   "repos": 124,
-  "private": 43
+  "private": 43,
+  "releases": {
+    "okiro": "v1.0.0",
+    "lyra": "v0.21.0",
+    "notae": "v0.11.0",
+    "comma": "v0.5.1",
+    "ti": "v1.7.0",
+    "ltx": "v0.2.0",
+    "graduale-romanum": "v2.1"
+  }
 }
